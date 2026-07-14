@@ -70,9 +70,9 @@ with col1:
     st.subheader("🗓️ Quando os crimes acontecem?")
     st.write("Cruzamento das horas do dia com os dias da semana:")
     
-    # Adicionamos uma quebra de linha sutil para empurrar o gráfico um pouquinho para baixo
-    # fazendo com que ele alinhe perfeitamente com a altura do seletor do mapa ao lado
-    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+    # ESSE É O CONTROLADOR: Aumentamos para 55px para empurrar o gráfico para baixo 
+    # e alinhar o topo dele exatamente com o topo da moldura do mapa ao lado.
+    st.markdown("<div style='height: 55px;'></div>", unsafe_allow_html=True)
     
     matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
     dias_ordenados = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
