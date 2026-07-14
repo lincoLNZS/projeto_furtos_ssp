@@ -72,7 +72,7 @@ with col1:
     
     # ESSE É O CONTROLADOR: Aumentamos para 55px para empurrar o gráfico para baixo 
     # e alinhar o topo dele exatamente com o topo da moldura do mapa ao lado.
-    st.markdown("<div style='height: 55px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 45px;'></div>", unsafe_allow_html=True)
     
     matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
     dias_ordenados = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
