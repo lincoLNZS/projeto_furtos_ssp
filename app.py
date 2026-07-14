@@ -60,28 +60,44 @@ Esta ferramenta interativa revela os **padrões de dia/horário** e as **localiz
 
 st.write("---")
 
-# Criamos as colunas com proporções bem definidas para dar estabilidade ao layout
+# 1. MOVER OS TÍTULOS PARA FORA DAS COLUNAS (Garante que a base de partida das colunas seja idêntica)
+col_titulo1, col_titulo2 = st.columns([1.1, 1.9], gap="large")
+
+with col_titulo1:
+    st.subheader("🗓️ Quando os crimes acontecem?")
+    st.write("Cruzamento das horas do dia com os dias da semana:")
+
+with col_titulo2:
+    st.subheader("📍 Onde os crimes acontecem?")
+    st.write("Selecione o dia para ver as ruas e cruzamentos de maior risco:")
+
+# 2. SELETOR DO MAPA (Fica no topo da área útil antes do mapa)
+dias_ordenados = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+
+dia_selecionado = st.selectbox(
+    "Selecione o Dia da Semana para Filtrar o Mapa:",
+    ['Visão Geral (Todos os Furtos)'] + dias_ordenados,
+    label_visibility="collapsed" # Esconde o texto redundante para ganhar espaço vertical
+)
+
+st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+# 3. CRIAÇÃO DAS COLUNAS DE CONTEÚDO VISUAL
 col1, col2 = st.columns([1.1, 1.9], gap="large")
 
 # ----------------------------------------------------
-# COLUNA 1: Gráfico de Calor Temporal (Alinhado)
+# COLUNA 1: Gráfico de Calor Temporal (Alinhamento Perfeito)
 # ----------------------------------------------------
 with col1:
-    st.subheader("🗓️ Quando os crimes acontecem?")
-    st.write("Cruzamento das horas do dia com os dias da semana:")
-    
-    # ESSE É O CONTROLADOR: Aumentamos para 55px para empurrar o gráfico para baixo 
-    # e alinhar o topo dele exatamente com o topo da moldura do mapa ao lado.
-    st.markdown("<div style='height: 55px;'></div>", unsafe_allow_html=True)
+    # Aumentado cirurgicamente para 93px para compensar o recuo do Matplotlib
+    # e alinhar a linha branca do gráfico exatamente com a linha do mapa ao lado.
+    st.markdown("<div style='height: 93px;'></div>", unsafe_allow_html=True)
     
     matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
-    dias_ordenados = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
     matriz_horarios = matriz_horarios.reindex(columns=dias_ordenados).fillna(0)
     
-    # Criamos a figura ajustando a proporção para caber perfeitamente ao lado do mapa
     fig, ax = plt.subplots(figsize=(7, 8.5))  
     
-    # Renderiza o heatmap de forma limpa
     sns.heatmap(
         matriz_horarios, 
         cmap='YlOrRd', 
@@ -96,24 +112,15 @@ with col1:
     ax.set_ylabel("Hora do Dia", fontsize=11)
     ax.set_xlabel("Dia da Semana", fontsize=11)
     
-    # Removemos as bordas invisíveis extras do Matplotlib que causavam o desalinhamento
+    # Zera margens internas desnecessárias
     fig.subplots_adjust(top=0.98, bottom=0.08, left=0.10, right=0.98)
     
-    # use_container_width=True força o gráfico a preencher a coluna de forma estável
     st.pyplot(fig, use_container_width=True)
 
 # ----------------------------------------------------
 # COLUNA 2: Mapa Interativo com Filtros Dinâmicos
 # ----------------------------------------------------
 with col2:
-    st.subheader("📍 Onde os crimes acontecem?")
-    st.write("Selecione o dia para ver as ruas e cruzamentos de maior risco:")
-    
-    dia_selecionado = st.selectbox(
-        "Selecione o Dia da Semana para Filtrar o Mapa:",
-        ['Visão Geral (Todos os Furtos)'] + dias_ordenados
-    )
-    
     if dia_selecionado == 'Visão Geral (Todos os Furtos)':
         df_mapa = df_filtrado
     else:
@@ -124,7 +131,6 @@ with col2:
     
     lat_centro, lng_centro = -23.5505, -46.6333
     
-    # Criando o mapa usando o fundo CartoDB limpo (sem rótulos por baixo)
     mapa_streamlit = folium.Map(
         location=[lat_centro, lng_centro], 
         zoom_start=11, 
@@ -132,7 +138,6 @@ with col2:
         attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     )
     
-    # Suavizando as cores com transparência
     degrade_cores_mapa = {
         0.2: 'rgba(0, 0, 255, 0.3)',   
         0.5: 'rgba(255, 255, 0, 0.5)', 
@@ -140,7 +145,6 @@ with col2:
         1.0: 'rgba(255, 0, 0, 0.7)'    
     }
     
-    # Adicionando o HeatMap suavizado
     HeatMap(
         coordenadas,
         radius=7,             
@@ -150,7 +154,6 @@ with col2:
         gradient=degrade_cores_mapa
     ).add_to(mapa_streamlit)
     
-    # Inserindo os nomes de ruas e bairros por CIMA do calor
     folium.TileLayer(
         tiles='https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
         attr='&copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -158,5 +161,5 @@ with col2:
         control=False         
     ).add_to(mapa_streamlit)
     
-    # Renderiza o mapa mantendo a proporção estável
-    st_folium(mapa_streamlit, width=800, height=580) # Ajustado para 580 de altura para bater perfeito com o gráfico lateral
+    # Mantendo a altura fixa em harmonia com o gráfico
+    st_folium(mapa_streamlit, width=800, height=580)
