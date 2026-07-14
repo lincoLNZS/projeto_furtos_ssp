@@ -60,10 +60,11 @@ Esta ferramenta interativa revela os **padrões de dia/horário** e as **localiz
 
 st.write("---")
 
-col1, col2 = st.columns([1, 2])
+# Criamos as colunas com proporções bem definidas para dar estabilidade ao layout
+col1, col2 = st.columns([1.1, 1.9], gap="large")
 
 # ----------------------------------------------------
-# COLUNA 1: Gráfico de Calor Temporal
+# COLUNA 1: Gráfico de Calor Temporal (Estabilizado)
 # ----------------------------------------------------
 with col1:
     st.subheader("🗓️ Quando os crimes acontecem?")
@@ -73,12 +74,29 @@ with col1:
     dias_ordenados = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
     matriz_horarios = matriz_horarios.reindex(columns=dias_ordenados).fillna(0)
     
-    fig, ax = plt.subplots(figsize=(8, 10))
-    sns.heatmap(matriz_horarios, cmap='YlOrRd', annot=True, fmt='g', linewidths=.5, cbar=False, ax=ax)
-    ax.set_ylabel("Hora do Dia")
-    ax.set_xlabel("Dia da Semana")
+    # Criamos a figura com tamanho fixo e controlado para evitar deformações
+    fig, ax = plt.subplots(figsize=(7, 9))  
     
-    st.pyplot(fig)
+    # Renderiza o heatmap de forma limpa
+    sns.heatmap(
+        matriz_horarios, 
+        cmap='YlOrRd', 
+        annot=True, 
+        fmt='g', 
+        linewidths=.5, 
+        cbar=False, 
+        ax=ax,
+        annot_kws={"size": 9} # Deixa os números internos legíveis e estáveis
+    )
+    
+    ax.set_ylabel("Hora do Dia", fontsize=11)
+    ax.set_xlabel("Dia da Semana", fontsize=11)
+    
+    # Ajusta as margens para o gráfico não cortar as bordas
+    plt.tight_layout()
+    
+    # use_container_width=True força o gráfico a preencher a coluna sem reajustar a altura dinamicamente
+    st.pyplot(fig, use_container_width=True)
 
 # ----------------------------------------------------
 # COLUNA 2: Mapa Interativo com Filtros Dinâmicos
@@ -101,17 +119,40 @@ with col2:
     coordenadas = coordenadas[(coordenadas['LATITUDE'] != 0) & (coordenadas['LONGITUDE'] != 0)].values.tolist()
     
     lat_centro, lng_centro = -23.5505, -46.6333
-    mapa_streamlit = folium.Map(location=[lat_centro, lng_centro], zoom_start=11, tiles='CartoDB positron')
     
-    degrade_cores_mapa = {0.2: 'blue', 0.5: 'yellow', 0.8: 'orange', 1.0: 'red'}
+    # Criando o mapa usando o fundo CartoDB limpo (sem rótulos por baixo)
+    mapa_streamlit = folium.Map(
+        location=[lat_centro, lng_centro], 
+        zoom_start=11, 
+        tiles='https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+        attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    )
     
+    # Suavizando as cores com transparência
+    degrade_cores_mapa = {
+        0.2: 'rgba(0, 0, 255, 0.3)',   
+        0.5: 'rgba(255, 255, 0, 0.5)', 
+        0.8: 'rgba(255, 165, 0, 0.6)', 
+        1.0: 'rgba(255, 0, 0, 0.7)'    
+    }
+    
+    # Adicionando o HeatMap suavizado
     HeatMap(
         coordenadas,
-        radius=9,
-        blur=5,
-        min_opacity=0.5,
+        radius=7,             
+        blur=8,               
+        min_opacity=0.2,      
         max_zoom=14,
         gradient=degrade_cores_mapa
     ).add_to(mapa_streamlit)
     
+    # Inserindo os nomes de ruas e bairros por CIMA do calor
+    folium.TileLayer(
+        tiles='https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+        attr='&copy; <a href="https://carto.com/attributions">CARTO</a>',
+        overlay=True,         
+        control=False         
+    ).add_to(mapa_streamlit)
+    
+    # Renderiza o mapa mantendo a proporção estável
     st_folium(mapa_streamlit, width=800, height=600)
