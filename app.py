@@ -64,18 +64,22 @@ st.write("---")
 col1, col2 = st.columns([1.1, 1.9], gap="large")
 
 # ----------------------------------------------------
-# COLUNA 1: Gráfico de Calor Temporal (Estabilizado)
+# COLUNA 1: Gráfico de Calor Temporal (Alinhado)
 # ----------------------------------------------------
 with col1:
     st.subheader("🗓️ Quando os crimes acontecem?")
     st.write("Cruzamento das horas do dia com os dias da semana:")
     
+    # Adicionamos uma quebra de linha sutil para empurrar o gráfico um pouquinho para baixo
+    # fazendo com que ele alinhe perfeitamente com a altura do seletor do mapa ao lado
+    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+    
     matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
     dias_ordenados = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
     matriz_horarios = matriz_horarios.reindex(columns=dias_ordenados).fillna(0)
     
-    # Criamos a figura com tamanho fixo e controlado para evitar deformações
-    fig, ax = plt.subplots(figsize=(7, 9))  
+    # Criamos a figura ajustando a proporção para caber perfeitamente ao lado do mapa
+    fig, ax = plt.subplots(figsize=(7, 8.5))  
     
     # Renderiza o heatmap de forma limpa
     sns.heatmap(
@@ -86,16 +90,16 @@ with col1:
         linewidths=.5, 
         cbar=False, 
         ax=ax,
-        annot_kws={"size": 9} # Deixa os números internos legíveis e estáveis
+        annot_kws={"size": 9}
     )
     
     ax.set_ylabel("Hora do Dia", fontsize=11)
     ax.set_xlabel("Dia da Semana", fontsize=11)
     
-    # Ajusta as margens para o gráfico não cortar as bordas
-    plt.tight_layout()
+    # Removemos as bordas invisíveis extras do Matplotlib que causavam o desalinhamento
+    fig.subplots_adjust(top=0.98, bottom=0.08, left=0.10, right=0.98)
     
-    # use_container_width=True força o gráfico a preencher a coluna sem reajustar a altura dinamicamente
+    # use_container_width=True força o gráfico a preencher a coluna de forma estável
     st.pyplot(fig, use_container_width=True)
 
 # ----------------------------------------------------
@@ -155,4 +159,4 @@ with col2:
     ).add_to(mapa_streamlit)
     
     # Renderiza o mapa mantendo a proporção estável
-    st_folium(mapa_streamlit, width=800, height=600)
+    st_folium(mapa_streamlit, width=800, height=580) # Ajustado para 580 de altura para bater perfeito com o gráfico lateral
