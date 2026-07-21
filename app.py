@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 @st.cache_data
-def carregar_dados():
+df_filtrado = carregar_dados()
     df = pd.read_excel('veiculos_subtraidos_2026.xlsx', sheet_name=2)
     df_sel = df[['RUBRICA', 'DESCR_TIPO_VEICULO', 'DATA_OCORRENCIA_BO', 'HORA_OCORRENCIA', 'LATITUDE', 'LONGITUDE']]
     
@@ -128,3 +128,5 @@ with col2:
     ).add_to(mapa_streamlit)
     
     st_folium(mapa_streamlit, width="100%", height=580)
+    # Agora esta linha vai funcionar perfeitamente:
+matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
