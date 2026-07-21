@@ -5,29 +5,37 @@ import folium
 from streamlit_folium import st_folium
 from folium.plugins import HeatMap
 
+# CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(
     page_title="Dashboard - Furtos de Motos SSP-SP",
     page_icon="🏍️",
     layout="wide"
 )
 
+# LISTA GLOBAL DE DIAS ORDENADOS
+dias_ordenados = [
+    'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+    'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'
+]
+
+# 1. FUNÇÃO DE CARREGAMENTO DOS DADOS
 @st.cache_data
-df_filtrado = carregar_dados()
+def carregar_dados():
     df = pd.read_excel('veiculos_subtraidos_2026.xlsx', sheet_name=2)
     df_sel = df[['RUBRICA', 'DESCR_TIPO_VEICULO', 'DATA_OCORRENCIA_BO', 'HORA_OCORRENCIA', 'LATITUDE', 'LONGITUDE']]
     
-    # 1. Filtro de Furto e Motos
+    # Filtro de Furto e Motos
     filtro_furto = df_sel['RUBRICA'].str.contains('Furto', case=False, na=False)
     filtro_moto = df_sel['DESCR_TIPO_VEICULO'].str.contains('MOTO', case=False, na=False)
     df_filtrado = df_sel[filtro_furto & filtro_moto].copy()
     
-    # 2. Converte a data para o formato datetime
+    # Converte a data para o formato datetime
     df_filtrado['DATA_OCORRENCIA_BO'] = pd.to_datetime(df_filtrado['DATA_OCORRENCIA_BO'], errors='coerce')
     
-    # 3. FILTRO DE DATA: Mantém apenas ocorrências que de fato aconteceram em 2026
+    # FILTRO DE DATA: Mantém apenas ocorrências ocorridas em 2026
     df_filtrado = df_filtrado[df_filtrado['DATA_OCORRENCIA_BO'] >= '2026-01-01']
     
-    # 4. Limpeza de coordenadas e horários
+    # Limpeza de coordenadas e horários
     df_filtrado = df_filtrado.dropna(subset=['LATITUDE', 'LONGITUDE', 'DATA_OCORRENCIA_BO', 'HORA_OCORRENCIA'])
     df_filtrado = df_filtrado[(df_filtrado['LATITUDE'] != 0) & (df_filtrado['LONGITUDE'] != 0)]
     
@@ -47,7 +55,10 @@ df_filtrado = carregar_dados()
     
     return df_filtrado
 
-# COLUNAS DO PAINEL PRINCIPAL
+# 2. CARREGAMENTO DOS DADOS (CHAMADA DA FUNÇÃO)
+df_filtrado = carregar_dados()
+
+# 3. COLUNAS DO PAINEL PRINCIPAL
 col1, col2 = st.columns([1, 1], gap="large")
 
 # --- COLUNA 1: MATRIZ DE CALOR (PLOTLY) ---
@@ -58,7 +69,7 @@ with col1:
     matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
     matriz_horarios = matriz_horarios.reindex(columns=dias_ordenados).fillna(0)
     
-    # Criando o gráfico interativo e alinhado nativamente
+    # Criando o gráfico interativo
     fig = px.imshow(
         matriz_horarios,
         labels=dict(x="Dia da Semana", y="Hora do Dia", color="Furtos"),
@@ -128,5 +139,3 @@ with col2:
     ).add_to(mapa_streamlit)
     
     st_folium(mapa_streamlit, width="100%", height=580)
-    # Agora esta linha vai funcionar perfeitamente:
-matriz_horarios = pd.crosstab(df_filtrado['HORA'], df_filtrado['DIA_SEMANA'])
