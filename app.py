@@ -45,7 +45,7 @@ def carregar_dados():
     df_filtrado = df_filtrado.dropna(subset=['HORA', 'DIA_SEMANA'])
     df_filtrado['HORA'] = df_filtrado['HORA'].astype(int)
     
-    return df_filtrado]
+    return df_filtrado
 
 # COLUNAS DO PAINEL PRINCIPAL
 col1, col2 = st.columns([1, 1], gap="large")
