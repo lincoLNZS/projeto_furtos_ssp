@@ -80,13 +80,13 @@ with col1:
         aspect="auto"
     )
     
-   fig.update_layout(
+    fig.update_layout(
         height=580,
         margin=dict(l=10, r=10, t=10, b=10),
         xaxis_title=None,
         yaxis_title="Hora do Dia",
         yaxis=dict(
-            dtick=1,  # Force o exato passo de 1 em 1 hora
+            dtick=1,
             tickmode='linear'
         )
     )
