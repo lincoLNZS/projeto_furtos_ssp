@@ -55,8 +55,34 @@ def carregar_dados():
     
     return df_filtrado
 
-# 2. CARREGAMENTO DOS DADOS (CHAMADA DA FUNÇÃO)
+# 2. CARREGAMENTO DOS DADOS
 df_filtrado = carregar_dados()
+
+# --- TITULO E APRESENTAÇÃO ---
+st.title("🏍️ Análise de Furtos de Motocicletas — SP (2026)")
+
+st.markdown("""
+### Sobre o Projeto
+O projeto partiu de uma curiosidade pessoal: **estatisticamente, quais são os dias e horários mais perigosos de se deixar a motocicleta estacionada na rua?**
+
+Ao pesquisar por esses números, notei uma escassez de dados específicos sobre furtos — a maioria dos levantamentos foca majoritariamente em roubos. Vi nisso uma oportunidade perfeita para unir dois temas do meu interesse: a análise de dados e a investigação desse padrão de risco.
+
+**Escopo da Análise:**
+* **Período dos dados:** 01/01/2026 a 03/06/2026 *(filtrados apenas para fatos ocorridos em 2026)*.
+* **Visualizações:** Cruzamento de Dias x Horários de incidência e Mapa de Calor geográfico com filtro por dia da semana.
+""")
+
+# --- CARDS DE MÉTRICAS (KPIs) ---
+total_furtos = len(df_filtrado)
+dia_pico = df_filtrado['DIA_SEMANA'].mode()[0]
+hora_pico = f"{df_filtrado['HORA'].mode()[0]}:00h"
+
+kpi1, kpi2, kpi3 = st.columns(3)
+kpi1.metric("Total de Furtos no Período", f"{total_furtos:,}".replace(",", "."))
+kpi2.metric("Dia de Maior Incidência", dia_pico)
+kpi3.metric("Horário de Pico", hora_pico)
+
+st.divider()
 
 # 3. COLUNAS DO PAINEL PRINCIPAL
 col1, col2 = st.columns([1, 1], gap="large")
@@ -143,3 +169,18 @@ with col2:
     ).add_to(mapa_streamlit)
     
     st_folium(mapa_streamlit, width="100%", height=580)
+
+st.divider()
+
+# --- ANÁLISE FINAL E INSIGHTS ---
+st.subheader("💡 Análise Final")
+
+st.markdown("""
+Podemos ver na matriz que o **meio da semana** é onde há mais ocorrências de furtos no estado. 
+
+Curiosamente, **terça, quarta e quinta-feira** — o mesmo trio de dias apontado pela CET como o de maior congestionamento em São Paulo¹ — também concentram os maiores volumes de furtos de motocicletas neste levantamento, especialmente no **fim da tarde e início da noite**. 
+
+Isso pode sugerir uma relação direta entre maior exposição/circulação de veículos na rua e a oportunidade para o furto, embora não seja possível confirmar causalidade apenas com os dados disponíveis.
+""")
+
+st.caption("¹ Fonte sobre dados de trânsito: [Sindpd / Dados da CET (2025)](https://sindpd.org.br/2025/05/13/congestionamento-piora-sao-paulo-pior-dia/)")
